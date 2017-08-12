@@ -1,6 +1,8 @@
 package com.codepath.iwantbootcamp;
 
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -17,9 +19,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
-    private static final String KEY_CURR_TEXT = "KEY_CURR_TEXT";
-    private static final String KEY_MODIFIED_TEXT = "KEY_MODIFIED_TEXT";
-    private static final int MODIFIED_TEXT_OK = 999;
 
     ArrayList<String> items;
     ArrayAdapter<String> itemsAdapter;
@@ -27,22 +26,25 @@ public class MainActivity extends AppCompatActivity {
 
     int selectTextPos;
 
+    SQLiteDatabase mDatabase;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        populateArrayItems();
+        mDatabase = openDB();
+        populateDBItems();
+
         lvItems = (ListView) findViewById(R.id.lvItems);
         lvItems.setAdapter(itemsAdapter);
 
         setupListViewListener();
     }
 
-    private void populateArrayItems() {
+    private void populateDBItems() {
         items = new ArrayList<>();
-
-        readItems();
+        queryItems();
 
         itemsAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, items);
     }
@@ -53,10 +55,11 @@ public class MainActivity extends AppCompatActivity {
         itemsAdapter.add(itemText);
         etNewItem.setText("");
 
-        writeItems();
+        insertItem();
     }
 
     private void setupListViewListener() {
+
         lvItems.setOnItemLongClickListener(
                 new AdapterView.OnItemLongClickListener() {
                     @Override
@@ -64,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
                         items.remove(pos);
                         itemsAdapter.notifyDataSetChanged();
 
-                        writeItems();
+                        insertItem();
 
                         return true;
                     }
@@ -85,29 +88,6 @@ public class MainActivity extends AppCompatActivity {
         );
     }
 
-    private void readItems() {
-        File filesDir = getFilesDir();
-        File todoFile = new File(filesDir, "todo.txt");
-
-        try {
-            items = new ArrayList<>(FileUtils.readLines(todoFile));
-//            Toast.makeText(this, "Read Text", Toast.LENGTH_LONG).show();
-        } catch (IOException e) {
-            items = new ArrayList<>();
-        }
-    }
-
-    private void writeItems() {
-        File filesDir = getFilesDir();
-        File todoFile = new File(filesDir, "todo.txt");
-
-        try {
-            FileUtils.writeLines(todoFile, items);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     // ====================================================================================================
     // Get select text and pass it to EditItemActivity using INTEND
     // ====================================================================================================
@@ -115,7 +95,7 @@ public class MainActivity extends AppCompatActivity {
         String selectText = itemsAdapter.getItem(selectTextPos);
 
         Intent editItemIntent = new Intent(getBaseContext(), EditItemActivity.class);
-        editItemIntent.putExtra(KEY_CURR_TEXT, selectText);
+        editItemIntent.putExtra(GlobalInfo.KEY_CURR_TEXT, selectText);
 
         startActivityForResult(editItemIntent, 100);
     }
@@ -127,16 +107,83 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent resultIntent) {
         super.onActivityResult(requestCode, resultCode, resultIntent);
 
-        if(resultCode == MODIFIED_TEXT_OK) {
-            String modifiedText = resultIntent.getStringExtra(KEY_MODIFIED_TEXT);
+        if(resultCode == GlobalInfo.MODIFIED_TEXT_OK) {
+            String modifiedText = resultIntent.getStringExtra(GlobalInfo.KEY_MODIFIED_TEXT);
 
             items.remove(selectTextPos);
             itemsAdapter.notifyDataSetChanged();
             items.add(selectTextPos, modifiedText);
-            writeItems();
+//            writeItems();
+            insertItem();
         }
         else {
-            Toast.makeText(getBaseContext(), "Error!!!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getBaseContext(), "No Change.", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    // ====================================================================================================
+    // Open new Database
+    // ====================================================================================================
+    private SQLiteDatabase openDB() {
+        MySQLiteHelper dbHelper = new MySQLiteHelper(this);
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+
+        return db;
+    }
+
+    private void insertItem () {
+        deleteItem();
+
+        int cnt = items.size();
+        String insertItem = "";
+        String INSERT_SQL = "";
+
+        for(int i = 0; i < cnt; i++) {
+            insertItem = items.get(i);
+            INSERT_SQL = "insert into " + GlobalInfo.TABLE_NAME + " (" + "ITEM" + ") " + "values" + "('" + insertItem + "');";
+            mDatabase.execSQL(INSERT_SQL);
+        }
+    }
+
+    private void queryItem() {
+        String SQL = "select ITEM "
+                + " from " + GlobalInfo.TABLE_NAME;
+        Cursor c1 = mDatabase.rawQuery(SQL, null);
+
+        int cnt = c1.getCount();
+        String name = "";
+
+        Toast.makeText(this, "Num of Data = " + cnt , Toast.LENGTH_SHORT).show();
+
+        for(int i = 0; i < cnt; i++) {
+            c1.moveToNext();
+            name = c1.getString(0);
+
+            Toast.makeText(this, "Item = " + name , Toast.LENGTH_SHORT).show();
+        }
+
+        c1.close();
+    }
+
+    private void queryItems() {
+        String SQL = "select ITEM "
+                + " from " + GlobalInfo.TABLE_NAME;
+        Cursor c1 = mDatabase.rawQuery(SQL, null);
+
+        int cnt = c1.getCount();
+        String itemInfo = "";
+        items.clear();
+
+        for(int i = 0; i < cnt; i++) {
+            c1.moveToNext();
+            itemInfo = c1.getString(0);
+            items.add(itemInfo);
+        }
+
+        c1.close();
+    }
+
+    private void deleteItem() {
+        mDatabase.execSQL( "delete from " + GlobalInfo.TABLE_NAME );
     }
 }

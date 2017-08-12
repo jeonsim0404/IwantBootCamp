@@ -7,9 +7,6 @@ import android.view.View;
 import android.widget.EditText;
 
 public class EditItemActivity extends AppCompatActivity {
-    private static final String KEY_CURR_TEXT = "KEY_CURR_TEXT";
-    private static final String KEY_MODIFIED_TEXT = "KEY_MODIFIED_TEXT";
-    private static final int MODIFIED_TEXT_OK = 999;
 
     EditText etModifiedText;
 
@@ -26,16 +23,16 @@ public class EditItemActivity extends AppCompatActivity {
 
         Intent resultIntent = new Intent();
 
-        resultIntent.putExtra(KEY_MODIFIED_TEXT, modifiedText);
+        resultIntent.putExtra(GlobalInfo.KEY_MODIFIED_TEXT, modifiedText);
 
-        setResult(MODIFIED_TEXT_OK, resultIntent);
+        setResult(GlobalInfo.MODIFIED_TEXT_OK, resultIntent);
 
         finish();
     }
 
     private void initEditItemActivity() {
         etModifiedText = (EditText) findViewById(R.id.etModifyText);
-        String editText = (String) getIntent().getCharSequenceExtra(KEY_CURR_TEXT);
+        String editText = (String) getIntent().getCharSequenceExtra(GlobalInfo.KEY_CURR_TEXT);
 
         etModifiedText.setText(editText);
     }

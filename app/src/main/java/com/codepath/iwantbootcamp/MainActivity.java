@@ -3,9 +3,12 @@ package com.codepath.iwantbootcamp;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
@@ -18,14 +21,16 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import static com.codepath.iwantbootcamp.R.id.parent;
+
 public class MainActivity extends AppCompatActivity {
 
     ArrayList<String> items;
     ArrayAdapter<String> itemsAdapter;
     ListView lvItems;
 
-    int selectTextPos;
-
+    int selectTextPos = -1;
+    AdapterView<?> gAdapter;
     SQLiteDatabase mDatabase;
 
     @Override
@@ -59,11 +64,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupListViewListener() {
-
+/*
         lvItems.setOnItemLongClickListener(
                 new AdapterView.OnItemLongClickListener() {
                     @Override
                     public boolean onItemLongClick(AdapterView<?> adapter, View item, int pos, long id) {
+                        for (int j = 0; j < adapter.getChildCount(); j++)
+                            adapter.getChildAt(j).setBackgroundColor(Color.TRANSPARENT);
+
                         items.remove(pos);
                         itemsAdapter.notifyDataSetChanged();
 
@@ -73,16 +81,32 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
         );
-
+*/
         // ====================================================================================================
         // Add up on click listener to select one text for modify
         // ====================================================================================================
+/*
         lvItems.setOnItemClickListener(
                 new AdapterView.OnItemClickListener() {
                     @Override
                     public void onItemClick(AdapterView<?> adapter, View item, int pos, long id) {
                         selectTextPos = pos;
                         editTextData();
+                    }
+                }
+        );
+*/
+
+        lvItems.setOnItemClickListener(
+                new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> adapter, View item, int pos, long id) {
+                        for (int j = 0; j < adapter.getChildCount(); j++)
+                            adapter.getChildAt(j).setBackgroundColor(Color.TRANSPARENT);
+
+                        item.setBackgroundColor(Color.YELLOW);
+                        selectTextPos = pos;
+                        gAdapter = adapter;
                     }
                 }
         );
@@ -113,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
             items.remove(selectTextPos);
             itemsAdapter.notifyDataSetChanged();
             items.add(selectTextPos, modifiedText);
-//            writeItems();
+
             insertItem();
         }
         else {
@@ -185,5 +209,32 @@ public class MainActivity extends AppCompatActivity {
 
     private void deleteItem() {
         mDatabase.execSQL( "delete from " + GlobalInfo.TABLE_NAME );
+    }
+
+    public void onClickDeleteItem(View view) {
+        if(selectTextPos < 0)
+            Toast.makeText(this, "Please, select item, first", Toast.LENGTH_SHORT).show();
+        else {
+            items.remove(selectTextPos);
+            itemsAdapter.notifyDataSetChanged();
+
+            cleanLineColor();
+
+            insertItem();
+            selectTextPos = -1;
+        }
+    }
+
+    public void onClickEditItem(View view) {
+        if(selectTextPos < 0)
+            Toast.makeText(this, "Please, select item, first", Toast.LENGTH_SHORT).show();
+        else {
+            editTextData();
+        }
+    }
+
+    private void cleanLineColor() {
+        for (int j = 0; j < gAdapter.getChildCount(); j++)
+            gAdapter.getChildAt(j).setBackgroundColor(Color.TRANSPARENT);
     }
 }

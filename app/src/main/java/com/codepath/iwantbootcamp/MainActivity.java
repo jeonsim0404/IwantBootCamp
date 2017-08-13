@@ -56,11 +56,17 @@ public class MainActivity extends AppCompatActivity {
 
     public void onAddItem(View view) {
         EditText etNewItem = (EditText) findViewById(R.id.etNewItem);
-        String itemText = etNewItem.getText().toString();
-        itemsAdapter.add(itemText);
-        etNewItem.setText("");
+        String itemText = etNewItem.getText().toString().trim();
 
-        insertItem();
+        if(itemText.length() == 0) {
+            Toast.makeText(this, "Please, input data, first." , Toast.LENGTH_SHORT).show();
+        }
+        else {
+            itemsAdapter.add(itemText);
+            etNewItem.setText("");
+
+            insertItem();
+        }
     }
 
     private void setupListViewListener() {

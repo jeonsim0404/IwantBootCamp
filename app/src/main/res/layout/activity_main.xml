@@ -22,9 +22,10 @@
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
             android:gravity="center_horizontal"
-            android:text=" I want BootCamp"
+            android:text="@string/app_name"
             android:textColor="#000000"
-            android:textSize="30sp" />
+            android:textSize="30sp"
+            android:textStyle="bold|italic" />
 
         <ImageView
             android:id="@+id/ivDelete"
@@ -55,7 +56,7 @@
         android:layout_below="@+id/rlHead" />
 
     <EditText
-        android:id="@+id/etNewItem"
+        android:id="@+id/etName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"

@@ -12,6 +12,7 @@ public class GlobalInfo {
     public static final String KEY_CURR_TEXT = "KEY_CURR_TEXT";
     public static final String KEY_MODIFIED_TEXT = "KEY_MODIFIED_TEXT";
     public static final int MODIFIED_TEXT_OK = 999;
+    public static final String KEY_PASS_DATA = "KEY_PASS_DATA";
 
     /**
      * Save File Name

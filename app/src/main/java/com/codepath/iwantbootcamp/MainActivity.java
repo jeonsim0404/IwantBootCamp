@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.MotionEvent;
@@ -23,7 +24,7 @@ import java.util.ArrayList;
 
 import static com.codepath.iwantbootcamp.R.id.parent;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements EditItemFragment.EditNameDialogListener {
 
     ArrayList<String> items;
     ArrayAdapter<String> itemsAdapter;
@@ -55,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onAddItem(View view) {
-        EditText etNewItem = (EditText) findViewById(R.id.etNewItem);
+        EditText etNewItem = (EditText) findViewById(R.id.etName);
         String itemText = etNewItem.getText().toString().trim();
 
         if(itemText.length() == 0) {
@@ -119,36 +120,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // ====================================================================================================
-    // Get select text and pass it to EditItemActivity using INTEND
+    // Get select text and pass it to EditItem DialogFragment
     // ====================================================================================================
     private void editTextData() {
+        FragmentManager fm = getSupportFragmentManager();
+        EditItemFragment editDialogFragment = EditItemFragment.newInstance("Edit DialogFragment");
+
+        Bundle passDataList = new Bundle();
+        ArrayList itemList = new ArrayList();
+
         String selectText = itemsAdapter.getItem(selectTextPos);
 
-        Intent editItemIntent = new Intent(getBaseContext(), EditItemActivity.class);
-        editItemIntent.putExtra(GlobalInfo.KEY_CURR_TEXT, selectText);
+        itemList.add(selectText);
+        passDataList.putStringArrayList(GlobalInfo.KEY_PASS_DATA, itemList);
+        editDialogFragment.setArguments(passDataList);
 
-        startActivityForResult(editItemIntent, 100);
-    }
-
-    // ====================================================================================================
-    // Receive modified text from EditItemActivity using INTEND
-    // and set the modified text to the List
-    // ====================================================================================================
-    protected void onActivityResult(int requestCode, int resultCode, Intent resultIntent) {
-        super.onActivityResult(requestCode, resultCode, resultIntent);
-
-        if(resultCode == GlobalInfo.MODIFIED_TEXT_OK) {
-            String modifiedText = resultIntent.getStringExtra(GlobalInfo.KEY_MODIFIED_TEXT);
-
-            items.remove(selectTextPos);
-            itemsAdapter.notifyDataSetChanged();
-            items.add(selectTextPos, modifiedText);
-
-            insertItem();
-        }
-        else {
-            Toast.makeText(getBaseContext(), "No Change.", Toast.LENGTH_SHORT).show();
-        }
+        editDialogFragment.show(fm, "fragment_edit_item");
     }
 
     // ====================================================================================================
@@ -242,5 +229,21 @@ public class MainActivity extends AppCompatActivity {
     private void cleanLineColor() {
         for (int j = 0; j < gAdapter.getChildCount(); j++)
             gAdapter.getChildAt(j).setBackgroundColor(Color.TRANSPARENT);
+    }
+
+    @Override
+    public void onFinishEditDialog(ArrayList passItemList) {
+        if(passItemList.size() > 0) {
+            String passName = passItemList.get(0).toString();
+
+            items.remove(selectTextPos);
+            itemsAdapter.notifyDataSetChanged();
+            items.add(selectTextPos, passName);
+
+            insertItem();
+        }
+        else {
+            Toast.makeText(this, "No Change", Toast.LENGTH_SHORT).show();
+        }
     }
 }
